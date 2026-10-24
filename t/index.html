@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>mus</title>
+<style>
+  :root { color-scheme: dark; }
+  body { margin: 0; font: 16px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; background: #111315; color: #e8e8e8; }
+  main { max-width: 520px; margin: 0 auto; padding: 56px 20px; }
+  .brand { color: #7fd8b4; font-weight: 600; letter-spacing: .02em; }
+  h1 { font-size: 30px; line-height: 1.2; margin: 20px 0 4px; word-break: break-word; }
+  .artist { color: #b9bcbf; font-size: 18px; margin: 0 0 28px; word-break: break-word; }
+  a.button { display: block; text-align: center; text-decoration: none; padding: 14px 18px; border-radius: 999px; margin: 0 0 12px; font-weight: 600; }
+  .primary { background: #7fd8b4; color: #0d1110; }
+  .secondary { background: #23272a; color: #e8e8e8; }
+  p.note { color: #8a8e92; font-size: 14px; margin-top: 24px; }
+  [hidden] { display: none !important; }
+</style>
+</head>
+<body>
+<main>
+  <div class="brand">mus</div>
+  <h1 id="title">Трек</h1>
+  <p class="artist" id="artist"></p>
+  <a class="button primary" id="open" href="#">Открыть в mus</a>
+  <a class="button secondary" id="original" href="#" hidden>Слушать в браузере</a>
+  <p class="note">Если ничего не открылось, значит mus не установлен на этом устройстве. Тогда трек можно послушать в браузере.<br>
+  Nothing opened? mus is not installed here; listen in the browser instead.</p>
+</main>
+<script>
+  (function () {
+    var q = new URLSearchParams(location.search);
+    var id = q.get("id") || "";
+    var title = q.get("t") || "";
+    var artist = q.get("a") || "";
+    var original = q.get("u") || "";
+    if (!/^[a-z]{2,4}:[A-Za-z0-9:_\-.]+$/.test(id)) id = "";
+    if (!/^https:\/\//.test(original)) original = "";
+
+    if (title) { document.getElementById("title").textContent = title; document.title = title + (artist ? " — " + artist : "") + " · mus"; }
+    document.getElementById("artist").textContent = artist;
+
+    // What the app opens: the track by its id, and the name to find it by when the id means nothing to it.
+    var seconds = /^[0-9]{1,5}$/.test(q.get("d") || "") ? q.get("d") : "";
+    var rest = "?t=" + encodeURIComponent(title) + "&a=" + encodeURIComponent(artist) + (seconds ? "&d=" + seconds : "") + (original ? "&u=" + encodeURIComponent(original) : "");
+    var app = "mus://track/" + encodeURIComponent(id) + rest;
+    var android = /Android/i.test(navigator.userAgent);
+    // On Android an intent link opens whichever mus is installed (the release or the debug build), and the browser
+    // goes to the original link when there is none.
+    var href = android
+      ? "intent://track/" + encodeURIComponent(id) + rest + "#Intent;scheme=mus;" + (original ? "S.browser_fallback_url=" + encodeURIComponent(original) + ";" : "") + "end"
+      : app;
+
+    var open = document.getElementById("open");
+    open.href = href;
+    if (original) { var o = document.getElementById("original"); o.href = original; o.hidden = false; }
+    if (id || title) location.href = href;
+  })();
+</script>
+</body>
+</html>
